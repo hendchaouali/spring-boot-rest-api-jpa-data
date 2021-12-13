@@ -1,0 +1,152 @@
+{
+	"info": {
+		"_postman_id": "9b4c0f3b-444e-489a-a032-45e52f623968",
+		"name": "playlists",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "createSong",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{      \"category\": \"JAZZ\",\r\n            \"title\": \"I'm Not Lost  V2\",\r\n            \"description\": \"Album myk  V2\",\r\n            \"duration\": \"2:01\",\r\n            \"artistName\": \"myk  V2\"\r\n   \r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url}}/songs",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"songs"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getSongById",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/songs/1",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"songs",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "updatePlaylist",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"category\": \"CLASSICAL\",\r\n   \"id\": 1,\r\n            \"title\": \"I'm Not Lost  V7\",\r\n            \"description\": \"Album myk  V7\",\r\n            \"duration\": \"2:01\",\r\n            \"artistName\": \"SAM\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url}}/songs",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"songs"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "deleteSongById",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/songs/1",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"songs",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getSongs",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/songs",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"songs"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getSongsByCategory",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/songs/category/POP",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"songs",
+						"category",
+						"POP"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getSongsByArtist",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/songs/artist/sam",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"songs",
+						"artist",
+						"sam"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
