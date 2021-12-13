@@ -24,7 +24,7 @@ Un client lance une requête HTTP, et le serveur renvoie une réponse à travers
 * Spring Boot 2.5.7 (avec Spring Web MVC et Spring Data JPA)
 * PostgreSQL
 * H2 Database
-* Lombok .18.22
+* Lombok 1.18.22
 * Maven 4.0.0
 
 
@@ -394,7 +394,7 @@ Ce contrôleur expose des end-point pour faire les CRUD (créer, récupérer, me
 | ------------- | ------------- | ------------- | ------------- |
 | POST  | /api/songs  | Créer une chanson  | 201  |
 | PUT  | /api/songs/{id}  | Modifier une chanson  | 200  |
-| GET  | /api/songs/{id}  | Récupérer une chanson | 200, 204  |
+| GET  | /api/songs/{id}  | Récupérer une chanson | 200  |
 | GET  | /api/songs  | Récupérer toutes les chansons  | 200, 204  |
 | GET  | /api/songs/category/{category} | Récupérer toutes les chansons par catégorie  | 200, 204  |
 | GET  | /api/songs/artist/{artistName} | Récupérer toutes les chansons par nom d'artiste  | 200, 204  |
