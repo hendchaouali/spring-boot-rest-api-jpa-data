@@ -674,6 +674,16 @@ Dons, nous allons créer un fichier **application.properties** pour les tests so
 
 ![Screenshot](src/main/resources/images/resource-test.PNG)
 
+```yaml
+spring.datasource.url=jdbc:h2:mem:test_playlist_db
+spring.datasource.driverClassName=org.h2.Driver
+spring.datasource.username=playlistadmin
+spring.datasource.password=admin
+spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+spring.jpa.show-sql=true
+spring.jpa.hibernate.ddl-auto=update
+```
+
 ##### Tests Unitaires
 
 
