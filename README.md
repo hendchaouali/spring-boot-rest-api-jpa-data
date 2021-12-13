@@ -31,7 +31,7 @@ Un client lance une requête HTTP, et le serveur renvoie une réponse à travers
 ## Initialisation du projet
 Pour amorcer une application Spring Boot , nous pouvons démarrer le projet à partir de zéro avec notre IDE préféré, ou simplement utiliser un autre moyen qui facilite la vie : [SpringInitializr](https://start.spring.io/)
 
-Initialement, nous avons choisi les dépendances suivantes : Spring web, Spring Data JPA, Validation, Lombok et PostgreSQL Driver.
+Initialement, nous avons choisi les dépendances suivantes : Spring web, Spring Data JPA, Validation,H2 Database, Lombok et PostgreSQL Driver.
 
 ![Screenshot](src/main/resources/images/springInitializer.PNG)
 
