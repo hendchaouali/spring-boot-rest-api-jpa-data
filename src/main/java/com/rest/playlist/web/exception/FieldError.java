@@ -1,4 +1,4 @@
-package com.rest.playlist.exception;
+package com.rest.playlist.web.exception;
 
 import lombok.Builder;
 import lombok.Getter;

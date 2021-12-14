@@ -1,4 +1,4 @@
-package com.rest.playlist.resource;
+package com.rest.playlist.web.resource;
 
 import com.rest.playlist.model.Song;
 import com.rest.playlist.service.ISongService;
@@ -25,12 +25,7 @@ public class SongResource {
 
     @GetMapping
     public ResponseEntity<List<Song>> getAllSongs() {
-
         List<Song> songs = ISongService.getAllSongs();
-
-        if (songs.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }
         return new ResponseEntity<>(songs, HttpStatus.OK);
     }
 
@@ -38,18 +33,12 @@ public class SongResource {
     @GetMapping("/category/{category}")
     public ResponseEntity<List<Song>> getSongsByCategory(@PathVariable String category) {
         List<Song> songs = ISongService.getSongsByCategory(category);
-        if (songs.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }
         return new ResponseEntity<>(songs, HttpStatus.OK);
     }
 
     @GetMapping("/artist/{artistName}")
     public ResponseEntity<List<Song>> getSongsByArtist(@PathVariable String artistName) {
         List<Song> songs = ISongService.getSongsByArtistName(artistName);
-        if (songs.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }
         return new ResponseEntity<>(songs, HttpStatus.OK);
     }
 

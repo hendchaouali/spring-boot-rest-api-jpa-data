@@ -1,7 +1,7 @@
 package com.rest.playlist.service;
 
 import com.rest.playlist.enums.SongCategory;
-import com.rest.playlist.exception.ResourceNotFoundException;
+import com.rest.playlist.web.exception.ResourceNotFoundException;
 import com.rest.playlist.model.Song;
 import com.rest.playlist.repository.SongRepository;
 import org.junit.Before;
@@ -14,7 +14,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 

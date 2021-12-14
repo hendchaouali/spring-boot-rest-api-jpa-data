@@ -1,4 +1,4 @@
-package com.rest.playlist.exception;
+package com.rest.playlist.web.exception;
 
 import com.rest.playlist.service.SongServiceImpl;
 import org.slf4j.Logger;
