@@ -24,7 +24,7 @@ Un client lance une requête HTTP, et le serveur renvoie une réponse à travers
 * Spring Boot 2.5.7 (avec Spring Web MVC et Spring Data JPA)
 * PostgreSQL
 * H2 Database
-* Lombok .18.22
+* Lombok 1.18.22
 * Maven 4.0.0
 
 
@@ -88,7 +88,6 @@ Contient des dépendances pour Spring Boot. Dans notre cas, nous sommes besoin d
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
-                <version>4.13.1</version>
                 <scope>test</scope>
             </dependency>
     		<dependency>
@@ -390,15 +389,24 @@ public class SongServiceImpl implements ISongService {
 Ce contrôleur expose des end-point pour faire les CRUD (créer, récupérer, mettre à jour, supprimer et trouver) des chansons.
 
 ##### Points de terminaison d’API
-| Méthode HTTP | URI | Description | Codes d'états http valides |
+- Les codes de réponse HTTP: 
+
+* **200 Success** : La demande a réussi
+* **201 Created** : La demande a été satisfaite et a entraîné la création d'une nouvelle ressource
+* **204 No Content** : La demande a répondu à la demande mais n'a pas besoin de retourner un corps d'entité
+* **400 Bad Request** : La requête n'a pas pu être comprise par le serveur en raison d'une syntaxe mal formée
+* **404 Not Found** : Le serveur n'a rien trouvé correspondant à l'URI de la requête
+* **409 Conflict** : La demande n'a pas pu être traitée en raison d'un conflit avec l'état actuel de la ressource
+
+| Méthode HTTP | URI | Description | Codes d'états http |
 | ------------- | ------------- | ------------- | ------------- |
 | POST  | /api/songs  | Créer une chanson  | 201  |
-| PUT  | /api/songs/{id}  | Modifier une chanson  | 200  |
-| GET  | /api/songs/{id}  | Récupérer une chanson | 200, 204  |
-| GET  | /api/songs  | Récupérer toutes les chansons  | 200, 204  |
-| GET  | /api/songs/category/{category} | Récupérer toutes les chansons par catégorie  | 200, 204  |
-| GET  | /api/songs/artist/{artistName} | Récupérer toutes les chansons par nom d'artiste  | 200, 204  |
-| DELETE  | /api/songs/{id}  | Supprimer une chanson | 204  |
+| PUT  | /api/songs/{id}  | Modifier une chanson  | 200, 404  |
+| GET  | /api/songs/{id}  | Récupérer une chanson | 200, 404  |
+| GET  | /api/songs  | Récupérer toutes les chansons  | 200  |
+| GET  | /api/songs/category/{category} | Récupérer toutes les chansons par catégorie  | 200, 404  |
+| GET  | /api/songs/artist/{artistName} | Récupérer toutes les chansons par nom d'artiste  | 200 |
+| DELETE  | /api/songs/{id}  | Supprimer une chanson | 204, 404  |
 
 – l'annotation **@RestController** est utilisée pour définir un contrôleur.
 
@@ -426,12 +434,7 @@ public class SongResource {
 
     @GetMapping
     public ResponseEntity<List<Song>> getAllSongs() {
-
         List<Song> songs = ISongService.getAllSongs();
-
-        if (songs.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }
         return new ResponseEntity<>(songs, HttpStatus.OK);
     }
 
@@ -439,18 +442,12 @@ public class SongResource {
     @GetMapping("/category/{category}")
     public ResponseEntity<List<Song>> getSongsByCategory(@PathVariable String category) {
         List<Song> songs = ISongService.getSongsByCategory(category);
-        if (songs.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }
         return new ResponseEntity<>(songs, HttpStatus.OK);
     }
 
     @GetMapping("/artist/{artistName}")
     public ResponseEntity<List<Song>> getSongsByArtist(@PathVariable String artistName) {
         List<Song> songs = ISongService.getSongsByArtistName(artistName);
-        if (songs.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }
         return new ResponseEntity<>(songs, HttpStatus.OK);
     }
 
@@ -999,132 +996,281 @@ public class SongServiceUnitTest {
     * **SongResourceUnitTest**
     
 ```java
-@SpringBootTest
-@Transactional
 @RunWith(SpringRunner.class)
-public class SongServiceIntegrationTest {
+@WebMvcTest(controllers = SongResource.class)
+public class SongResourceUnitTest {
 
-    private final static Logger log = LoggerFactory.getLogger(SongServiceIntegrationTest.class);
-
-    @Autowired
-    private SongRepository songRepository;
+    private static final Logger log = LoggerFactory.getLogger(SongResourceUnitTest.class);
 
     @Autowired
-    private SongServiceImpl songService;
+    private MockMvc mockMvc;
 
-    private Song defaultSong;
+    @MockBean
+    private ISongService songService;
+
+    private Song mySong;
+    private List<Song> songList = new ArrayList<>();
+
 
     @Before
     public void setup() {
-        Song mySong = new Song();
+        mySong = new Song();
 
         mySong.setTitle("For The Lover That I Lost");
         mySong.setDescription("Live At Abbey Road Studios");
         mySong.setCategory(SongCategory.POP);
         mySong.setDuration("3:01");
         mySong.setArtistName("Sam Smith");
-        defaultSong = songRepository.saveAndFlush(mySong);
 
     }
 
     @Test
-    public void testGetAllSongs() {
-        List<Song> songs = songService.getAllSongs();
-        assertThat(songs).isNotNull().isNotEmpty();
+    public void testGetAllSongs() throws Exception {
+        songList.add(mySong);
+        when(songService.getAllSongs()).thenReturn(songList);
+
+        mockMvc.perform(get("/api/songs")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[*].title").value(songList.get(0).getTitle()))
+                .andExpect(jsonPath("$[*].description").value(songList.get(0).getDescription()))
+                .andExpect(jsonPath("$[*].category").value(songList.get(0).getCategory().toString()))
+                .andExpect(jsonPath("$[*].artistName").value(songList.get(0).getArtistName()))
+                .andExpect(jsonPath("$[*].duration").value(songList.get(0).getDuration()));
+        verify(songService).getAllSongs();
+        verify(songService,times(1)).getAllSongs();
+    }
+
+   @Test
+    public void testGetEmptyListSongs() throws Exception {
+        when(songService.getAllSongs()).thenReturn(songList);
+
+        mockMvc.perform(get("/api/songs")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", Matchers.hasSize(0)));
+
+   }
+    @Test
+    public void testGetSongsByCategory() throws Exception {
+        songList.add(mySong);
+        when(songService.getSongsByCategory("POP")).thenReturn(songList);
+
+        mockMvc.perform(get("/api/songs/category/" + mySong.getCategory())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[*].title").value(songList.get(0).getTitle()))
+                .andExpect(jsonPath("$[*].description").value(songList.get(0).getDescription()))
+                .andExpect(jsonPath("$[*].category").value(songList.get(0).getCategory().toString()))
+                .andExpect(jsonPath("$[*].artistName").value(songList.get(0).getArtistName()))
+                .andExpect(jsonPath("$[*].duration").value(songList.get(0).getDuration()));
+    }
+
+   @Test
+    public void testGetEmptyListSongsByCategory() throws Exception {
+        when(songService.getSongsByCategory("CLASSICAL")).thenReturn(songList);
+
+        mockMvc.perform(get("/api/songs/category/CLASSICAL")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", Matchers.hasSize(0)));
+
+   }
+
+
+    @Test
+    public void testGetSongsWithNonExistingCategory() throws Exception {
+        doThrow(new ResourceNotFoundException("Not found Category with value = popy")).when(songService).getSongsByCategory("popy");
+        mockMvc.perform(get("/api/songs/category/popy")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is4xxClientError())
+                .andExpect(jsonPath("message").value("Not found Category with value = popy"));
+    }
+
+
+    @Test
+    public void testGetSongsByArtistName() throws Exception {
+        songList.add(mySong);
+        when(songService.getSongsByArtistName(mySong.getArtistName())).thenReturn(songList);
+
+        mockMvc.perform(get("/api/songs/artist/" + mySong.getArtistName())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[*].title").value(songList.get(0).getTitle()))
+                .andExpect(jsonPath("$[*].description").value(songList.get(0).getDescription()))
+                .andExpect(jsonPath("$[*].category").value(songList.get(0).getCategory().toString()))
+                .andExpect(jsonPath("$[*].artistName").value(songList.get(0).getArtistName()))
+                .andExpect(jsonPath("$[*].duration").value(songList.get(0).getDuration()));
+    }
+
+   @Test
+    public void testGetEmptyListSongsByArtistName() throws Exception {
+        when(songService.getSongsByArtistName("Isak")).thenReturn(songList);
+
+        mockMvc.perform(get("/api/songs/artist/Isak")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", Matchers.hasSize(0)));
+
+   }
+
+   @Test
+    public void testGetSongById() throws Exception {
+        mySong.setId(1000L);
+        when(songService.getSongById(mySong.getId())).thenReturn(mySong);
+
+        mockMvc.perform(get("/api/songs/" + mySong.getId())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value(mySong.getTitle()))
+                .andExpect(jsonPath("$.description").value(mySong.getDescription()))
+                .andExpect(jsonPath("$.category").value(mySong.getCategory().toString()))
+                .andExpect(jsonPath("$.artistName").value(mySong.getArtistName()))
+                .andExpect(jsonPath("$.duration").value(mySong.getDuration()));
+    }
+
+
+    @Test
+    public void testGetSongByNonExistingId() throws Exception {
+        doThrow(new ResourceNotFoundException("Not found Song with id = 1000")).when(songService).getSongById(1000L);
+        mockMvc.perform(get("/api/songs/1000")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is4xxClientError())
+                .andExpect(jsonPath("message").value("Not found Song with id = 1000"));
+    }
+
+
+    @Test
+    public void testCreateSong() throws Exception {
+            when(songService.createSong(any(Song.class))).thenReturn(mySong);
+        mockMvc.perform(post("/api/songs")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(asJsonString(mySong)))
+                .andExpect(status().isCreated());
+        verify(songService,times(1)).createSong(any());
     }
 
     @Test
-    public void testGetSongsByCategory() {
-        List<Song> songs = songService.getSongsByCategory("POP");
-        assertThat(songs).isNotNull().isNotEmpty();
-    }
-
-    @Test(expected = ResourceNotFoundException.class)
-    public void testGetSongsWithNonExistingCategory() {
-        songService.getSongsByCategory("Popy");
-    }
-
-    @Test
-    public void testGetSongsWithNonExistingCategoryV2() {
-        ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class, () -> songService.getSongById(4000L));
-
-        assertThat(ex.getMessage()).isEqualTo("Not found song with id = 4000");
+    public void testCreateSongWithTitleSizeLessThanThree() throws Exception {
+        mySong.setTitle("S");
+        doThrow(new ResourceNotFoundException("Size: titre doit être compris entre 3 et 50 caractères"))
+                .when(songService).createSong(mySong);
+        mockMvc.perform(post("/api/songs")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(asJsonString(mySong)))
+                .andExpect(status().is4xxClientError())
+                .andExpect(jsonPath("fieldErrors[0].message")
+                        .value("Size: titre doit être compris entre 3 et 50 caractères"));
     }
 
     @Test
-    public void testGetSongsByArtistName() {
-        List<Song> songs = songService.getSongsByArtistName("Sam Smith");
-        assertThat(songs).isNotNull().isNotEmpty();
+    public void testCreateSongWithDescriptionSizeLessThanThree() throws Exception {
+        mySong.setDescription("S");
+        doThrow(new ResourceNotFoundException("Size: description doit être compris entre 3 et 50 caractères"))
+                .when(songService).createSong(mySong);
+        mockMvc.perform(post("/api/songs")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(asJsonString(mySong)))
+                .andExpect(status().is4xxClientError())
+                .andExpect(jsonPath("fieldErrors[0].message")
+                        .value("Size: description doit être compris entre 3 et 50 caractères"));
     }
 
     @Test
-    public void testGetSongById() {
-        Song song = songService.getSongById(defaultSong.getId());
-        assertThat(song).isNotNull();
-        assertThat(song.getId()).isNotNull();
-        assertThat(song.getId()).isEqualTo(defaultSong.getId());
-        assertThat(song.getTitle()).isEqualTo(defaultSong.getTitle());
-        assertThat(song.getDescription()).isEqualTo(defaultSong.getDescription());
-        assertThat(song.getCategory()).isEqualTo(defaultSong.getCategory());
-        assertThat(song.getArtistName()).isEqualTo(defaultSong.getArtistName());
-        assertThat(song.getDuration()).isEqualTo(defaultSong.getDuration());
+    public void testCreateSongWithTitleNull() throws Exception {
+        mySong.setTitle(null);
+        doThrow(new ResourceNotFoundException("NotBlank: titre ne doit pas être null ou vide"))
+                .when(songService).createSong(mySong);
+        mockMvc.perform(post("/api/songs")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(asJsonString(mySong)))
+                .andExpect(status().is4xxClientError())
+                .andExpect(jsonPath("fieldErrors[0].message")
+                        .value("NotBlank: titre ne doit pas être null ou vide"));
     }
 
-    @Test(expected = ResourceNotFoundException.class)
-    public void testGetSongWithNonExistingId() {
-        songService.getSongById(4000L);
+
+    @Test
+    public void testUpdateSong() throws Exception {
+        mySong.setId(1000L);
+        when(songService.updateSong(mySong)).thenReturn(mySong);
+        mockMvc.perform(put("/api/songs")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(asJsonString(mySong)))
+                .andExpect(status().isOk());
     }
 
     @Test
-    public void testCreateSong() {
-        Song savedSong = songService.createSong(defaultSong);
-        assertThat(savedSong).isNotNull();
-        assertThat(savedSong.getId()).isNotNull();
-        assertThat(savedSong.getTitle()).isEqualTo(defaultSong.getTitle());
-        assertThat(savedSong.getDescription()).isEqualTo(defaultSong.getDescription());
-        assertThat(savedSong.getCategory()).isEqualTo(defaultSong.getCategory());
-        assertThat(savedSong.getDuration()).isEqualTo(defaultSong.getDuration());
-        assertThat(savedSong.getArtistName()).isEqualTo(defaultSong.getArtistName());
+    public void testUpdateSongWithTitleSizeLessThanThree() throws Exception {
+        mySong.setId(1000L);
+        mySong.setTitle("S");
+        doThrow(new ResourceNotFoundException("Size: titre doit être compris entre 3 et 50 caractères"))
+                .when(songService).updateSong(mySong);
+        mockMvc.perform(post("/api/songs")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(asJsonString(mySong)))
+                .andExpect(status().is4xxClientError())
+                .andExpect(jsonPath("fieldErrors[0].message")
+                        .value("Size: titre doit être compris entre 3 et 50 caractères"));
     }
 
     @Test
-    public void testUpdateSong() {
-        defaultSong.setTitle("Broken");
-        defaultSong.setDescription("Isak Album");
-        defaultSong.setArtistName("Isak Danielson");
-
-        Song updatedSong = songService.updateSong(defaultSong);
-        assertThat(updatedSong).isNotNull();
-        assertThat(updatedSong.getId()).isNotNull();
-        assertThat(updatedSong.getTitle()).isEqualTo("Broken");
-        assertThat(updatedSong.getDescription()).isEqualTo("Isak Album");
-        assertThat(updatedSong.getCategory()).isEqualTo(defaultSong.getCategory());
-        assertThat(updatedSong.getDuration()).isEqualTo(defaultSong.getDuration());
-        assertThat(updatedSong.getArtistName()).isEqualTo("Isak Danielson");
-
+    public void testUpdateSongWithDescriptionSizeLessThanThree() throws Exception {
+        mySong.setId(1000L);
+        mySong.setDescription("S");
+        doThrow(new ResourceNotFoundException("Size: description doit être compris entre 3 et 50 caractères"))
+                .when(songService).updateSong(mySong);
+        mockMvc.perform(post("/api/songs")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(asJsonString(mySong)))
+                .andExpect(status().is4xxClientError())
+                .andExpect(jsonPath("fieldErrors[0].message")
+                        .value("Size: description doit être compris entre 3 et 50 caractères"));
     }
 
-    @Test(expected = ResourceNotFoundException.class)
-    public void testUpdateSongWithNonExistingId() {
-        defaultSong.setId(4000L);
-        songService.updateSong(defaultSong);
-
-    }
     @Test
-    public void testDeleteSongById() {
-        songService.deleteSongById(defaultSong.getId());
-        Optional<Song> deletedSong = songRepository.findById(defaultSong.getId());
-        assertThat(deletedSong.isPresent()).isFalse();
-
+    public void testUpdateSongWithTitleNull() throws Exception {
+        mySong.setId(1000L);
+        mySong.setTitle(null);
+        doThrow(new ResourceNotFoundException("NotBlank: titre ne doit pas être null ou vide"))
+                .when(songService).updateSong(mySong);
+        mockMvc.perform(post("/api/songs")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(asJsonString(mySong)))
+                .andExpect(status().is4xxClientError())
+                .andExpect(jsonPath("fieldErrors[0].message")
+                        .value("NotBlank: titre ne doit pas être null ou vide"));
     }
 
-    @Test(expected = ResourceNotFoundException.class)
-    public void testDeleteSongWithNonExistingId() {
-        songService.deleteSongById(4000L);
+    @Test
+    public void testDeleteSongById() throws Exception {
+        mySong.setId(1000L);
+        doNothing().when(songService).deleteSongById(mySong.getId());
+        mockMvc.perform(delete("/api/songs/" + mySong.getId()))
+                .andExpect(status().isNoContent());
+    }
 
+    @Test
+    public void testDeleteNotFoundSong() throws Exception {
+        doThrow(new ResourceNotFoundException("Not found Song with id = 1000")).when(songService).deleteSongById(1000L);
+        mockMvc.perform(delete("/api/songs/1000"))
+                .andExpect(status().is4xxClientError())
+                .andExpect(jsonPath("message").value("Not found Song with id = 1000"));
     }
 }
 ```
+    
 ##### Tests d'intégration
 * **Service**
     * **SongServiceIntegrationTest**
@@ -1327,11 +1473,13 @@ public class SongResourceIntegrationTest {
     }
 
     @Test
-    public void testGetNoContentSongs() throws Exception {
+    public void testGetEmptyListSongs() throws Exception {
         songRepository.deleteAll();
         mockMvc.perform(get("/api/songs")
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(0)));
+
     }
 
     @Test
