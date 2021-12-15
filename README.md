@@ -390,14 +390,15 @@ public class SongServiceImpl implements ISongService {
 Ce contrôleur expose des end-point pour faire les CRUD (créer, récupérer, mettre à jour, supprimer et trouver) des chansons.
 
 ##### Points de terminaison d’API
+
 - Les codes de réponse HTTP: 
 
-* **200 Success** : La demande a réussi
-* **201 Created** : La demande a été satisfaite et a entraîné la création d'une nouvelle ressource
-* **204 No Content** : La demande a répondu à la demande mais n'a pas besoin de retourner un corps d'entité
-* **400 Bad Request** : La requête n'a pas pu être comprise par le serveur en raison d'une syntaxe mal formée
-* **404 Not Found** : Le serveur n'a rien trouvé correspondant à l'URI de la requête
-* **409 Conflict** : La demande n'a pas pu être traitée en raison d'un conflit avec l'état actuel de la ressource
+    * **200 Success** : La demande a réussi
+    * **201 Created** : La demande a été satisfaite et a entraîné la création d'une nouvelle ressource
+    * **204 No Content** : La demande a répondu à la demande mais n'a pas besoin de retourner un corps d'entité
+    * **400 Bad Request** : La requête n'a pas pu être comprise par le serveur en raison d'une syntaxe mal formée
+    * **404 Not Found** : Le serveur n'a rien trouvé correspondant à l'URI de la requête
+    * **409 Conflict** : La demande n'a pas pu être traitée en raison d'un conflit avec l'état actuel de la ressource
 
 | Méthode HTTP | URI | Description | Codes d'états http |
 | ------------- | ------------- | ------------- | ------------- |
