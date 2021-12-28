@@ -1,10 +1,10 @@
 package com.rest.playlist.resource;
 
 import com.rest.playlist.enums.SongCategory;
-import com.rest.playlist.web.exception.ServiceExceptionHandler;
 import com.rest.playlist.model.Song;
 import com.rest.playlist.repository.SongRepository;
 import com.rest.playlist.service.ISongService;
+import com.rest.playlist.web.exception.ServiceExceptionHandler;
 import com.rest.playlist.web.resource.SongResource;
 import org.junit.Before;
 import org.junit.Test;
@@ -66,7 +66,7 @@ public class SongResourceIntegrationTest {
 
     @Test
     public void testGetAllSongs() throws Exception {
-        Song savedSong = songRepository.saveAndFlush(mySong);
+        Song savedSong = songRepository.save(mySong);
         mockMvc.perform(get("/api/songs")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -88,7 +88,7 @@ public class SongResourceIntegrationTest {
 
     @Test
     public void testGetSongsByCategory() throws Exception {
-        Song savedSong = songRepository.saveAndFlush(mySong);
+        Song savedSong = songRepository.save(mySong);
         mockMvc.perform(get("/api/songs/category/{category}", savedSong.getCategory().toString())
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -110,7 +110,7 @@ public class SongResourceIntegrationTest {
 
     @Test
     public void testGetSongsByArtistName() throws Exception {
-        Song savedSong = songRepository.saveAndFlush(mySong);
+        Song savedSong = songRepository.save(mySong);
         mockMvc.perform(get("/api/songs/artist/{artist}", savedSong.getArtistName())
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -124,7 +124,7 @@ public class SongResourceIntegrationTest {
 
     @Test
     public void testGetSongById() throws Exception {
-        Song savedSong = songRepository.saveAndFlush(mySong);
+        Song savedSong = songRepository.save(mySong);
         mockMvc.perform(get("/api/songs/{id}", savedSong.getId())
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -146,7 +146,7 @@ public class SongResourceIntegrationTest {
     @Test
     public void testCreateSong() throws Exception {
         int sizeBefore = songRepository.findAll().size();
-        Song savedSong = songRepository.saveAndFlush(mySong);
+        Song savedSong = songRepository.save(mySong);
         mockMvc.perform(post("/api/songs")
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
@@ -211,7 +211,7 @@ public class SongResourceIntegrationTest {
 
     @Test
     public void testUpdateSong() throws Exception {
-        Song savedSong = songRepository.saveAndFlush(mySong);
+        Song savedSong = songRepository.save(mySong);
         savedSong.setTitle("Song updated");
         mockMvc.perform(put("/api/songs")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -222,7 +222,7 @@ public class SongResourceIntegrationTest {
 
     @Test
     public void testUpdateSongWithTitleSizeLessThanThree() throws Exception {
-        Song savedSong = songRepository.saveAndFlush(mySong);
+        Song savedSong = songRepository.save(mySong);
         savedSong.setTitle("S");
         mockMvc.perform(post("/api/songs")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -235,7 +235,7 @@ public class SongResourceIntegrationTest {
 
     @Test
     public void testUpdateSongWithDescriptionSizeLessThanThree() throws Exception {
-        Song savedSong = songRepository.saveAndFlush(mySong);
+        Song savedSong = songRepository.save(mySong);
         savedSong.setDescription("S");
         mockMvc.perform(post("/api/songs")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -248,7 +248,7 @@ public class SongResourceIntegrationTest {
 
     @Test
     public void testUpdateSongWithTitleNull() throws Exception {
-        Song savedSong = songRepository.saveAndFlush(mySong);
+        Song savedSong = songRepository.save(mySong);
         savedSong.setTitle(null);
         mockMvc.perform(post("/api/songs")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -262,7 +262,7 @@ public class SongResourceIntegrationTest {
 
     @Test
     public void testDeleteSongById() throws Exception {
-        Song savedSong = songRepository.saveAndFlush(mySong);
+        Song savedSong = songRepository.save(mySong);
         mockMvc.perform(delete("/api/songs/{id}", savedSong.getId()))
                 .andExpect(status().isNoContent());
 

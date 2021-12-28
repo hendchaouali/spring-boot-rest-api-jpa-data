@@ -1,9 +1,9 @@
 package com.rest.playlist.service;
 
 import com.rest.playlist.enums.SongCategory;
-import com.rest.playlist.web.exception.ResourceNotFoundException;
 import com.rest.playlist.model.Song;
 import com.rest.playlist.repository.SongRepository;
+import com.rest.playlist.web.exception.ResourceNotFoundException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,8 +14,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertThrows;
@@ -44,19 +44,19 @@ public class SongServiceIntegrationTest {
         mySong.setCategory(SongCategory.POP);
         mySong.setDuration("3:01");
         mySong.setArtistName("Sam Smith");
-        defaultSong = songRepository.saveAndFlush(mySong);
+        defaultSong = songRepository.save(mySong);
 
     }
 
     @Test
     public void testGetAllSongs() {
-        List<Song> songs = songService.getAllSongs();
+        Set<Song> songs = songService.getAllSongs();
         assertThat(songs).isNotNull().isNotEmpty();
     }
 
     @Test
     public void testGetSongsByCategory() {
-        List<Song> songs = songService.getSongsByCategory("POP");
+        Set<Song> songs = songService.getSongsByCategory("POP");
         assertThat(songs).isNotNull().isNotEmpty();
     }
 
@@ -74,7 +74,7 @@ public class SongServiceIntegrationTest {
 
     @Test
     public void testGetSongsByArtistName() {
-        List<Song> songs = songService.getSongsByArtistName("Sam Smith");
+        Set<Song> songs = songService.getSongsByArtistName("Sam Smith");
         assertThat(songs).isNotNull().isNotEmpty();
     }
 

@@ -10,7 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/songs")
@@ -24,21 +24,21 @@ public class SongResource {
     }
 
     @GetMapping
-    public ResponseEntity<List<Song>> getAllSongs() {
-        List<Song> songs = ISongService.getAllSongs();
+    public ResponseEntity<Set<Song>> getAllSongs() {
+        Set<Song> songs = ISongService.getAllSongs();
         return new ResponseEntity<>(songs, HttpStatus.OK);
     }
 
 
     @GetMapping("/category/{category}")
-    public ResponseEntity<List<Song>> getSongsByCategory(@PathVariable String category) {
-        List<Song> songs = ISongService.getSongsByCategory(category);
+    public ResponseEntity<Set<Song>> getSongsByCategory(@PathVariable String category) {
+        Set<Song> songs = ISongService.getSongsByCategory(category);
         return new ResponseEntity<>(songs, HttpStatus.OK);
     }
 
     @GetMapping("/artist/{artistName}")
-    public ResponseEntity<List<Song>> getSongsByArtist(@PathVariable String artistName) {
-        List<Song> songs = ISongService.getSongsByArtistName(artistName);
+    public ResponseEntity<Set<Song>> getSongsByArtist(@PathVariable String artistName) {
+        Set<Song> songs = ISongService.getSongsByArtistName(artistName);
         return new ResponseEntity<>(songs, HttpStatus.OK);
     }
 

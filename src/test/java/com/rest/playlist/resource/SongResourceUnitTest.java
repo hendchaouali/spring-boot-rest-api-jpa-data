@@ -1,9 +1,9 @@
 package com.rest.playlist.resource;
 
 import com.rest.playlist.enums.SongCategory;
-import com.rest.playlist.web.exception.ResourceNotFoundException;
 import com.rest.playlist.model.Song;
 import com.rest.playlist.service.ISongService;
+import com.rest.playlist.web.exception.ResourceNotFoundException;
 import com.rest.playlist.web.resource.SongResource;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -19,6 +19,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import static com.rest.playlist.TestUtils.asJsonString;
@@ -59,7 +60,7 @@ public class SongResourceUnitTest {
     @Test
     public void testGetAllSongs() throws Exception {
         songList.add(mySong);
-        when(songService.getAllSongs()).thenReturn(songList);
+        when(songService.getAllSongs()).thenReturn(new HashSet<>(songList));
 
         mockMvc.perform(get("/api/songs")
                 .contentType(MediaType.APPLICATION_JSON))
@@ -71,23 +72,24 @@ public class SongResourceUnitTest {
                 .andExpect(jsonPath("$[*].artistName").value(songList.get(0).getArtistName()))
                 .andExpect(jsonPath("$[*].duration").value(songList.get(0).getDuration()));
         verify(songService).getAllSongs();
-        verify(songService,times(1)).getAllSongs();
+        verify(songService, times(1)).getAllSongs();
     }
 
-   @Test
+    @Test
     public void testGetEmptyListSongs() throws Exception {
-        when(songService.getAllSongs()).thenReturn(songList);
+        when(songService.getAllSongs()).thenReturn(new HashSet<>(songList));
 
         mockMvc.perform(get("/api/songs")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", Matchers.hasSize(0)));
 
-   }
+    }
+
     @Test
     public void testGetSongsByCategory() throws Exception {
         songList.add(mySong);
-        when(songService.getSongsByCategory("POP")).thenReturn(songList);
+        when(songService.getSongsByCategory("POP")).thenReturn(new HashSet<>(songList));
 
         mockMvc.perform(get("/api/songs/category/" + mySong.getCategory())
                 .contentType(MediaType.APPLICATION_JSON))
@@ -100,16 +102,16 @@ public class SongResourceUnitTest {
                 .andExpect(jsonPath("$[*].duration").value(songList.get(0).getDuration()));
     }
 
-   @Test
+    @Test
     public void testGetEmptyListSongsByCategory() throws Exception {
-        when(songService.getSongsByCategory("CLASSICAL")).thenReturn(songList);
+        when(songService.getSongsByCategory("CLASSICAL")).thenReturn(new HashSet<>(songList));
 
         mockMvc.perform(get("/api/songs/category/CLASSICAL")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", Matchers.hasSize(0)));
 
-   }
+    }
 
 
     @Test
@@ -125,7 +127,7 @@ public class SongResourceUnitTest {
     @Test
     public void testGetSongsByArtistName() throws Exception {
         songList.add(mySong);
-        when(songService.getSongsByArtistName(mySong.getArtistName())).thenReturn(songList);
+        when(songService.getSongsByArtistName(mySong.getArtistName())).thenReturn(new HashSet<>(songList));
 
         mockMvc.perform(get("/api/songs/artist/" + mySong.getArtistName())
                 .contentType(MediaType.APPLICATION_JSON))
@@ -138,18 +140,18 @@ public class SongResourceUnitTest {
                 .andExpect(jsonPath("$[*].duration").value(songList.get(0).getDuration()));
     }
 
-   @Test
+    @Test
     public void testGetEmptyListSongsByArtistName() throws Exception {
-        when(songService.getSongsByArtistName("Isak")).thenReturn(songList);
+        when(songService.getSongsByArtistName("Isak")).thenReturn(new HashSet<>(songList));
 
         mockMvc.perform(get("/api/songs/artist/Isak")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", Matchers.hasSize(0)));
 
-   }
+    }
 
-   @Test
+    @Test
     public void testGetSongById() throws Exception {
         mySong.setId(1000L);
         when(songService.getSongById(mySong.getId())).thenReturn(mySong);
@@ -177,13 +179,13 @@ public class SongResourceUnitTest {
 
     @Test
     public void testCreateSong() throws Exception {
-            when(songService.createSong(any(Song.class))).thenReturn(mySong);
+        when(songService.createSong(any(Song.class))).thenReturn(mySong);
         mockMvc.perform(post("/api/songs")
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .content(asJsonString(mySong)))
                 .andExpect(status().isCreated());
-        verify(songService,times(1)).createSong(any());
+        verify(songService, times(1)).createSong(any());
     }
 
     @Test

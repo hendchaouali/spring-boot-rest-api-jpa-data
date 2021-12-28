@@ -5,22 +5,19 @@ import com.rest.playlist.model.Song;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.time.Instant;
 import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @RunWith(SpringRunner.class)
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class SongRepositoryTest {
 
     private static final Logger log = LoggerFactory.getLogger(SongRepositoryTest.class);
@@ -39,12 +36,6 @@ public class SongRepositoryTest {
         song.setArtistName("Sam Smith");
 
         savedSong = songRepository.save(song);
-        assertThat(savedSong).isNotNull();
-        assertThat(savedSong).hasFieldOrPropertyWithValue("title", "For The Lover That I Lost");
-        assertThat(savedSong).hasFieldOrPropertyWithValue("description", "Live At Abbey Road Studios");
-        assertThat(savedSong).hasFieldOrPropertyWithValue("category", SongCategory.POP);
-        assertThat(savedSong).hasFieldOrPropertyWithValue("duration", "3:01");
-        assertThat(savedSong).hasFieldOrPropertyWithValue("artistName", "Sam Smith");
     }
 
     @Test
@@ -58,7 +49,7 @@ public class SongRepositoryTest {
 
     @Test
     public void shouldFindSongsByCategory() {
-        List<Song> songs = songRepository.findSongsByCategory(savedSong.getCategory());
+        Set<Song> songs = songRepository.findSongsByCategory(savedSong.getCategory());
         assertThat(songs).isNotEmpty();
         assertThat(songs).hasSizeGreaterThanOrEqualTo(1);
         assertThat(songs).contains(savedSong);
@@ -66,7 +57,7 @@ public class SongRepositoryTest {
 
     @Test
     public void shouldFindSongsByArtistName() {
-        List<Song> songs = songRepository.findSongsByArtistName(savedSong.getArtistName());
+        Set<Song> songs = songRepository.findSongsByArtistName(savedSong.getArtistName());
         assertThat(songs).isNotEmpty();
         assertThat(songs).hasSizeGreaterThanOrEqualTo(1);
         assertThat(songs).contains(savedSong);

@@ -23,7 +23,7 @@ Un client lance une requête HTTP, et le serveur renvoie une réponse à travers
 * IDE Intellij IDEA
 * Spring Boot 2.5.7 (avec Spring Web MVC et Spring Data JPA)
 * PostgreSQL
-* H2 Database
+* H2 in-memory Database
 * Lombok 1.18.22
 * Maven 4.0.0
 
@@ -45,67 +45,67 @@ L'image ci-dessous montre la structure finale du projet
 Contient des dépendances pour Spring Boot. Dans notre cas, nous sommes besoin de ces dépendances.
 
 ```xml
-	<dependencies>
-    		<dependency>
-    			<groupId>org.springframework.boot</groupId>
-    			<artifactId>spring-boot-starter-data-jpa</artifactId>
-    			<version>2.5.7</version>
-    		</dependency>
-    		<dependency>
-    			<groupId>org.springframework.boot</groupId>
-    			<artifactId>spring-boot-starter-validation</artifactId>
-    		</dependency>
-    		<dependency>
-    			<groupId>org.springframework.boot</groupId>
-    			<artifactId>spring-boot-starter-web</artifactId>
-    		</dependency>
-    
-    		<dependency>
-    			<groupId>org.postgresql</groupId>
-    			<artifactId>postgresql</artifactId>
-    			<scope>runtime</scope>
-    		</dependency>
-    		<dependency>
-    			<groupId>org.springframework.boot</groupId>
-    			<artifactId>spring-boot-starter-test</artifactId>
-    			<scope>test</scope>
-    		</dependency>
-            <dependency>
-                <groupId>io.springfox</groupId>
-                <artifactId>springfox-swagger2</artifactId>
-                <version>2.9.2</version>
-            </dependency>
-    		<dependency>
-    			<groupId>io.springfox</groupId>
-    			<artifactId>springfox-swagger-ui</artifactId>
-    			<version>2.9.2</version>
-    		</dependency>
-            <dependency>
-                <groupId>org.apache.commons</groupId>
-                <artifactId>commons-lang3</artifactId>
-                <version>3.9</version>
-            </dependency>
-            <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <scope>test</scope>
-            </dependency>
-    		<dependency>
-    			<groupId>org.hibernate</groupId>
-    			<artifactId>hibernate-envers</artifactId>
-    			<version>5.6.1.Final</version>
-    		</dependency>
-    		<dependency>
-    			<groupId>com.h2database</groupId>
-    			<artifactId>h2</artifactId>
-    			<scope>test</scope>
-    		</dependency>
-            <dependency>
-                <groupId>org.projectlombok</groupId>
-                <artifactId>lombok</artifactId>
-                <version>1.18.22</version>
-            </dependency>
-        </dependencies>
+  <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+            <version>2.5.7</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger2</artifactId>
+            <version>2.9.2</version>
+        </dependency>
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger-ui</artifactId>
+            <version>2.9.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.9</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-envers</artifactId>
+            <version>5.6.1.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.22</version>
+        </dependency>
+    </dependencies>
 ```
 
 * **Main Class**
@@ -128,7 +128,7 @@ public class PlaylistApplication {
 ## I. Configuration PostgreSQL
 * **application.properties**
 
-Les propriétés **spring.datasource.username** et **spring.datasource.password** sont les mêmes que celles de votre installation de base de données.
+Les propriétés **spring.datasource.username** et **spring.datasource.password** sont les mêmes que celles de l'owner de la base de données.
 
 Spring Boot utilise Hibernate pour l'implémentation JPA, nous configurons PostgreSQLDialect pour PostgreSQL 🡺 Ce dialecte nous permet de générer de meilleures requêtes SQL pour cette base de données.
 
@@ -159,8 +159,8 @@ Il est préférable de faire abstraction de ces champs communs dans une classe d
 En utilisant la stratégie MappedSuperclass, l'héritage n'est évident que dans la classe mais pas dans le modèle d'entité. Il faut noter que cette classe n'a plus d’annotation @Entity, car elle ne sera pas conservée seule dans la base de données.
 
 ```java
-@MappedSuperclass
 @Audited
+@MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
 public abstract class AbstractAuditModel implements Serializable {
 
@@ -281,8 +281,9 @@ Avec **JpaRepository**, nous pouvons :
 @Repository
 @EnableJpaAuditing
 public interface SongRepository extends JpaRepository<Song, Long> {
-    List<Song> findSongsByCategory(SongCategory category);
-    List<Song> findSongsByArtistName(String artistName);
+    Set<Song> findSongsByCategory(SongCategory category);
+
+    Set<Song> findSongsByArtistName(String artistName);
 }
 ```
 ## V. Service
@@ -291,11 +292,11 @@ public interface SongRepository extends JpaRepository<Song, Long> {
 ```java
 public interface ISongService {
 
-    List<Song> getAllSongs();
+    Set<Song> getAllSongs();
 
-    List<Song> getSongsByCategory(String category);
+    Set<Song> getSongsByCategory(String category);
 
-    List<Song> getSongsByArtistName(String artistName);
+    Set<Song> getSongsByArtistName(String artistName);
 
     Song getSongById(Long id);
 
@@ -326,13 +327,13 @@ public class SongServiceImpl implements ISongService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Song> getAllSongs() {
-        return songRepository.findAll();
+    public Set<Song> getAllSongs() {
+        return new HashSet<>(songRepository.findAll());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Song> getSongsByCategory(String category) {
+    public Set<Song> getSongsByCategory(String category) {
         SongCategory searchedCategory = EnumUtils.getEnumIgnoreCase(SongCategory.class, category);
         if (searchedCategory == null) {
             throw new ResourceNotFoundException("Not found Category with value = " + category);
@@ -342,7 +343,7 @@ public class SongServiceImpl implements ISongService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Song> getSongsByArtistName(String artistName) {
+    public Set<Song> getSongsByArtistName(String artistName) {
         return songRepository.findSongsByArtistName(artistName);
     }
 
@@ -371,7 +372,7 @@ public class SongServiceImpl implements ISongService {
         searchedSong.setCategory(song.getCategory());
         searchedSong.setDuration(song.getDuration());
 
-        return songRepository.saveAndFlush(song);
+        return songRepository.save(song);
     }
 
     @Override
@@ -398,7 +399,6 @@ Ce contrôleur expose des end-point pour faire les CRUD (créer, récupérer, me
     * **204 No Content** : La demande a répondu à la demande mais n'a pas besoin de retourner un corps d'entité
     * **400 Bad Request** : La requête n'a pas pu être comprise par le serveur en raison d'une syntaxe mal formée
     * **404 Not Found** : Le serveur n'a rien trouvé correspondant à l'URI de la requête
-    * **409 Conflict** : La demande n'a pas pu être traitée en raison d'un conflit avec l'état actuel de la ressource
 
 | Méthode HTTP | URI | Description | Codes d'états http |
 | ------------- | ------------- | ------------- | ------------- |
@@ -435,21 +435,21 @@ public class SongResource {
     }
 
     @GetMapping
-    public ResponseEntity<List<Song>> getAllSongs() {
-        List<Song> songs = ISongService.getAllSongs();
+    public ResponseEntity<Set<Song>> getAllSongs() {
+        Set<Song> songs = ISongService.getAllSongs();
         return new ResponseEntity<>(songs, HttpStatus.OK);
     }
 
 
     @GetMapping("/category/{category}")
-    public ResponseEntity<List<Song>> getSongsByCategory(@PathVariable String category) {
-        List<Song> songs = ISongService.getSongsByCategory(category);
+    public ResponseEntity<Set<Song>> getSongsByCategory(@PathVariable String category) {
+        Set<Song> songs = ISongService.getSongsByCategory(category);
         return new ResponseEntity<>(songs, HttpStatus.OK);
     }
 
     @GetMapping("/artist/{artistName}")
-    public ResponseEntity<List<Song>> getSongsByArtist(@PathVariable String artistName) {
-        List<Song> songs = ISongService.getSongsByArtistName(artistName);
+    public ResponseEntity<Set<Song>> getSongsByArtist(@PathVariable String artistName) {
+        Set<Song> songs = ISongService.getSongsByArtistName(artistName);
         return new ResponseEntity<>(songs, HttpStatus.OK);
     }
 
@@ -701,7 +701,6 @@ Il désactivera la configuration automatique complète, puis n'appliquera que la
 ```java
 @DataJpaTest
 @RunWith(SpringRunner.class)
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class SongRepositoryTest {
 
     private static final Logger log = LoggerFactory.getLogger(SongRepositoryTest.class);
@@ -720,12 +719,6 @@ public class SongRepositoryTest {
         song.setArtistName("Sam Smith");
 
         savedSong = songRepository.save(song);
-        assertThat(savedSong).isNotNull();
-        assertThat(savedSong).hasFieldOrPropertyWithValue("title", "For The Lover That I Lost");
-        assertThat(savedSong).hasFieldOrPropertyWithValue("description", "Live At Abbey Road Studios");
-        assertThat(savedSong).hasFieldOrPropertyWithValue("category", SongCategory.POP);
-        assertThat(savedSong).hasFieldOrPropertyWithValue("duration", "3:01");
-        assertThat(savedSong).hasFieldOrPropertyWithValue("artistName", "Sam Smith");
     }
 
     @Test
@@ -739,7 +732,7 @@ public class SongRepositoryTest {
 
     @Test
     public void shouldFindSongsByCategory() {
-        List<Song> songs = songRepository.findSongsByCategory(savedSong.getCategory());
+        Set<Song> songs = songRepository.findSongsByCategory(savedSong.getCategory());
         assertThat(songs).isNotEmpty();
         assertThat(songs).hasSizeGreaterThanOrEqualTo(1);
         assertThat(songs).contains(savedSong);
@@ -747,7 +740,7 @@ public class SongRepositoryTest {
 
     @Test
     public void shouldFindSongsByArtistName() {
-        List<Song> songs = songRepository.findSongsByArtistName(savedSong.getArtistName());
+        Set<Song> songs = songRepository.findSongsByArtistName(savedSong.getArtistName());
         assertThat(songs).isNotEmpty();
         assertThat(songs).hasSizeGreaterThanOrEqualTo(1);
         assertThat(songs).contains(savedSong);
@@ -861,8 +854,8 @@ public class SongServiceUnitTest {
         when(songRepository.findAll()).thenReturn(songList);
 
         //test
-        List<Song> songs = songService.getAllSongs();
-        assertEquals(songs, songList);
+        Set<Song> songs = songService.getAllSongs();
+        assertEquals(songs, new HashSet<>(songList));
         verify(songRepository, times(1)).save(mySong);
         verify(songRepository, times(1)).findAll();
     }
@@ -870,10 +863,10 @@ public class SongServiceUnitTest {
     @Test
     public void testGetSongsByCategory() {
         songList.add(mySong);
-        when(songRepository.findSongsByCategory(SongCategory.POP)).thenReturn(songList);
+        when(songRepository.findSongsByCategory(SongCategory.POP)).thenReturn(new HashSet<>(songList));
 
         //test
-        List<Song> songs = songService.getSongsByCategory("POP");
+        Set<Song> songs = songService.getSongsByCategory("POP");
         assertThat(songs).isNotEmpty();
         assertThat(songs).hasSizeGreaterThanOrEqualTo(1);
         verify(songRepository, times(1)).findSongsByCategory(SongCategory.POP);
@@ -881,15 +874,15 @@ public class SongServiceUnitTest {
 
     @Test(expected = ResourceNotFoundException.class)
     public void testGetSongsWithNonExistCategory() {
-        List<Song> songs = songService.getSongsByCategory("Popy");
+        Set<Song> songs = songService.getSongsByCategory("Popy");
         assertTrue(songs.isEmpty());
     }
 
     @Test
     public void testGetSongsByArtistName() {
         songList.add(mySong);
-        when(songRepository.findSongsByArtistName(mySong.getArtistName())).thenReturn(songList);
-        List<Song> songs = songService.getSongsByArtistName(mySong.getArtistName());
+        when(songRepository.findSongsByArtistName(mySong.getArtistName())).thenReturn(new HashSet<>(songList));
+        Set<Song> songs = songService.getSongsByArtistName(mySong.getArtistName());
 
         //test
         assertThat(songs).isNotEmpty();
@@ -916,7 +909,7 @@ public class SongServiceUnitTest {
         mySong.setDescription("power album");
         mySong.setArtistName("Isak Danielson");
 
-        given(songRepository.saveAndFlush(mySong)).willReturn(mySong);
+        given(songRepository.save(mySong)).willReturn(mySong);
 
         Song updatedSong = songService.updateSong(mySong);
 
@@ -1029,7 +1022,7 @@ public class SongResourceUnitTest {
     @Test
     public void testGetAllSongs() throws Exception {
         songList.add(mySong);
-        when(songService.getAllSongs()).thenReturn(songList);
+        when(songService.getAllSongs()).thenReturn(new HashSet<>(songList));
 
         mockMvc.perform(get("/api/songs")
                 .contentType(MediaType.APPLICATION_JSON))
@@ -1041,23 +1034,24 @@ public class SongResourceUnitTest {
                 .andExpect(jsonPath("$[*].artistName").value(songList.get(0).getArtistName()))
                 .andExpect(jsonPath("$[*].duration").value(songList.get(0).getDuration()));
         verify(songService).getAllSongs();
-        verify(songService,times(1)).getAllSongs();
+        verify(songService, times(1)).getAllSongs();
     }
 
-   @Test
+    @Test
     public void testGetEmptyListSongs() throws Exception {
-        when(songService.getAllSongs()).thenReturn(songList);
+        when(songService.getAllSongs()).thenReturn(new HashSet<>(songList));
 
         mockMvc.perform(get("/api/songs")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", Matchers.hasSize(0)));
 
-   }
+    }
+
     @Test
     public void testGetSongsByCategory() throws Exception {
         songList.add(mySong);
-        when(songService.getSongsByCategory("POP")).thenReturn(songList);
+        when(songService.getSongsByCategory("POP")).thenReturn(new HashSet<>(songList));
 
         mockMvc.perform(get("/api/songs/category/" + mySong.getCategory())
                 .contentType(MediaType.APPLICATION_JSON))
@@ -1070,16 +1064,16 @@ public class SongResourceUnitTest {
                 .andExpect(jsonPath("$[*].duration").value(songList.get(0).getDuration()));
     }
 
-   @Test
+    @Test
     public void testGetEmptyListSongsByCategory() throws Exception {
-        when(songService.getSongsByCategory("CLASSICAL")).thenReturn(songList);
+        when(songService.getSongsByCategory("CLASSICAL")).thenReturn(new HashSet<>(songList));
 
         mockMvc.perform(get("/api/songs/category/CLASSICAL")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", Matchers.hasSize(0)));
 
-   }
+    }
 
 
     @Test
@@ -1095,7 +1089,7 @@ public class SongResourceUnitTest {
     @Test
     public void testGetSongsByArtistName() throws Exception {
         songList.add(mySong);
-        when(songService.getSongsByArtistName(mySong.getArtistName())).thenReturn(songList);
+        when(songService.getSongsByArtistName(mySong.getArtistName())).thenReturn(new HashSet<>(songList));
 
         mockMvc.perform(get("/api/songs/artist/" + mySong.getArtistName())
                 .contentType(MediaType.APPLICATION_JSON))
@@ -1108,18 +1102,18 @@ public class SongResourceUnitTest {
                 .andExpect(jsonPath("$[*].duration").value(songList.get(0).getDuration()));
     }
 
-   @Test
+    @Test
     public void testGetEmptyListSongsByArtistName() throws Exception {
-        when(songService.getSongsByArtistName("Isak")).thenReturn(songList);
+        when(songService.getSongsByArtistName("Isak")).thenReturn(new HashSet<>(songList));
 
         mockMvc.perform(get("/api/songs/artist/Isak")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", Matchers.hasSize(0)));
 
-   }
+    }
 
-   @Test
+    @Test
     public void testGetSongById() throws Exception {
         mySong.setId(1000L);
         when(songService.getSongById(mySong.getId())).thenReturn(mySong);
@@ -1147,13 +1141,13 @@ public class SongResourceUnitTest {
 
     @Test
     public void testCreateSong() throws Exception {
-            when(songService.createSong(any(Song.class))).thenReturn(mySong);
+        when(songService.createSong(any(Song.class))).thenReturn(mySong);
         mockMvc.perform(post("/api/songs")
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .content(asJsonString(mySong)))
                 .andExpect(status().isCreated());
-        verify(songService,times(1)).createSong(any());
+        verify(songService, times(1)).createSong(any());
     }
 
     @Test
@@ -1314,19 +1308,19 @@ public class SongServiceIntegrationTest {
         mySong.setCategory(SongCategory.POP);
         mySong.setDuration("3:01");
         mySong.setArtistName("Sam Smith");
-        defaultSong = songRepository.saveAndFlush(mySong);
+        defaultSong = songRepository.save(mySong);
 
     }
 
     @Test
     public void testGetAllSongs() {
-        List<Song> songs = songService.getAllSongs();
+        Set<Song> songs = songService.getAllSongs();
         assertThat(songs).isNotNull().isNotEmpty();
     }
 
     @Test
     public void testGetSongsByCategory() {
-        List<Song> songs = songService.getSongsByCategory("POP");
+        Set<Song> songs = songService.getSongsByCategory("POP");
         assertThat(songs).isNotNull().isNotEmpty();
     }
 
@@ -1344,7 +1338,7 @@ public class SongServiceIntegrationTest {
 
     @Test
     public void testGetSongsByArtistName() {
-        List<Song> songs = songService.getSongsByArtistName("Sam Smith");
+        Set<Song> songs = songService.getSongsByArtistName("Sam Smith");
         assertThat(songs).isNotNull().isNotEmpty();
     }
 
@@ -1463,7 +1457,7 @@ public class SongResourceIntegrationTest {
 
     @Test
     public void testGetAllSongs() throws Exception {
-        Song savedSong = songRepository.saveAndFlush(mySong);
+        Song savedSong = songRepository.save(mySong);
         mockMvc.perform(get("/api/songs")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -1481,12 +1475,11 @@ public class SongResourceIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(0)));
-
     }
 
     @Test
     public void testGetSongsByCategory() throws Exception {
-        Song savedSong = songRepository.saveAndFlush(mySong);
+        Song savedSong = songRepository.save(mySong);
         mockMvc.perform(get("/api/songs/category/{category}", savedSong.getCategory().toString())
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -1508,7 +1501,7 @@ public class SongResourceIntegrationTest {
 
     @Test
     public void testGetSongsByArtistName() throws Exception {
-        Song savedSong = songRepository.saveAndFlush(mySong);
+        Song savedSong = songRepository.save(mySong);
         mockMvc.perform(get("/api/songs/artist/{artist}", savedSong.getArtistName())
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -1522,7 +1515,7 @@ public class SongResourceIntegrationTest {
 
     @Test
     public void testGetSongById() throws Exception {
-        Song savedSong = songRepository.saveAndFlush(mySong);
+        Song savedSong = songRepository.save(mySong);
         mockMvc.perform(get("/api/songs/{id}", savedSong.getId())
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -1544,7 +1537,7 @@ public class SongResourceIntegrationTest {
     @Test
     public void testCreateSong() throws Exception {
         int sizeBefore = songRepository.findAll().size();
-        Song savedSong = songRepository.saveAndFlush(mySong);
+        Song savedSong = songRepository.save(mySong);
         mockMvc.perform(post("/api/songs")
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
@@ -1609,7 +1602,7 @@ public class SongResourceIntegrationTest {
 
     @Test
     public void testUpdateSong() throws Exception {
-        Song savedSong = songRepository.saveAndFlush(mySong);
+        Song savedSong = songRepository.save(mySong);
         savedSong.setTitle("Song updated");
         mockMvc.perform(put("/api/songs")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -1620,7 +1613,7 @@ public class SongResourceIntegrationTest {
 
     @Test
     public void testUpdateSongWithTitleSizeLessThanThree() throws Exception {
-        Song savedSong = songRepository.saveAndFlush(mySong);
+        Song savedSong = songRepository.save(mySong);
         savedSong.setTitle("S");
         mockMvc.perform(post("/api/songs")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -1633,7 +1626,7 @@ public class SongResourceIntegrationTest {
 
     @Test
     public void testUpdateSongWithDescriptionSizeLessThanThree() throws Exception {
-        Song savedSong = songRepository.saveAndFlush(mySong);
+        Song savedSong = songRepository.save(mySong);
         savedSong.setDescription("S");
         mockMvc.perform(post("/api/songs")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -1646,7 +1639,7 @@ public class SongResourceIntegrationTest {
 
     @Test
     public void testUpdateSongWithTitleNull() throws Exception {
-        Song savedSong = songRepository.saveAndFlush(mySong);
+        Song savedSong = songRepository.save(mySong);
         savedSong.setTitle(null);
         mockMvc.perform(post("/api/songs")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -1660,7 +1653,7 @@ public class SongResourceIntegrationTest {
 
     @Test
     public void testDeleteSongById() throws Exception {
-        Song savedSong = songRepository.saveAndFlush(mySong);
+        Song savedSong = songRepository.save(mySong);
         mockMvc.perform(delete("/api/songs/{id}", savedSong.getId()))
                 .andExpect(status().isNoContent());
 
@@ -1671,20 +1664,6 @@ public class SongResourceIntegrationTest {
         mockMvc.perform(delete("/api/songs/1000"))
                 .andExpect(status().is4xxClientError())
                 .andExpect(jsonPath("message").value("Not found song with id = 1000"));
-    }
-}
-```
-
-La classe **TestUtils** contient une méthode qui sert à convertir un objet Json en une chaîne de caractère.
-```java
-
-public class TestUtils {
-    public static String asJsonString(final Object obj) {
-        try {
-            return new ObjectMapper().writeValueAsString(obj);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
     }
 }
 ```

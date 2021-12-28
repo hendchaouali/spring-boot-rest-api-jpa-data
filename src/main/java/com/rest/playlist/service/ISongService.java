@@ -2,15 +2,15 @@ package com.rest.playlist.service;
 
 import com.rest.playlist.model.Song;
 
-import java.util.List;
+import java.util.Set;
 
 public interface ISongService {
 
-    List<Song> getAllSongs();
+    Set<Song> getAllSongs();
 
-    List<Song> getSongsByCategory(String category);
+    Set<Song> getSongsByCategory(String category);
 
-    List<Song> getSongsByArtistName(String artistName);
+    Set<Song> getSongsByArtistName(String artistName);
 
     Song getSongById(Long id);
 

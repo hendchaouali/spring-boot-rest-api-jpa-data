@@ -1,9 +1,9 @@
 package com.rest.playlist.service;
 
 import com.rest.playlist.enums.SongCategory;
-import com.rest.playlist.web.exception.ResourceNotFoundException;
 import com.rest.playlist.model.Song;
 import com.rest.playlist.repository.SongRepository;
+import com.rest.playlist.web.exception.ResourceNotFoundException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -12,12 +12,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.*;
+
 import static org.assertj.core.api.Assertions.assertThat;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
 import static org.junit.Assert.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
@@ -56,8 +53,8 @@ public class SongServiceUnitTest {
         when(songRepository.findAll()).thenReturn(songList);
 
         //test
-        List<Song> songs = songService.getAllSongs();
-        assertEquals(songs, songList);
+        Set<Song> songs = songService.getAllSongs();
+        assertEquals(songs, new HashSet<>(songList));
         verify(songRepository, times(1)).save(mySong);
         verify(songRepository, times(1)).findAll();
     }
@@ -65,10 +62,10 @@ public class SongServiceUnitTest {
     @Test
     public void testGetSongsByCategory() {
         songList.add(mySong);
-        when(songRepository.findSongsByCategory(SongCategory.POP)).thenReturn(songList);
+        when(songRepository.findSongsByCategory(SongCategory.POP)).thenReturn(new HashSet<>(songList));
 
         //test
-        List<Song> songs = songService.getSongsByCategory("POP");
+        Set<Song> songs = songService.getSongsByCategory("POP");
         assertThat(songs).isNotEmpty();
         assertThat(songs).hasSizeGreaterThanOrEqualTo(1);
         verify(songRepository, times(1)).findSongsByCategory(SongCategory.POP);
@@ -76,15 +73,15 @@ public class SongServiceUnitTest {
 
     @Test(expected = ResourceNotFoundException.class)
     public void testGetSongsWithNonExistCategory() {
-        List<Song> songs = songService.getSongsByCategory("Popy");
+        Set<Song> songs = songService.getSongsByCategory("Popy");
         assertTrue(songs.isEmpty());
     }
 
     @Test
     public void testGetSongsByArtistName() {
         songList.add(mySong);
-        when(songRepository.findSongsByArtistName(mySong.getArtistName())).thenReturn(songList);
-        List<Song> songs = songService.getSongsByArtistName(mySong.getArtistName());
+        when(songRepository.findSongsByArtistName(mySong.getArtistName())).thenReturn(new HashSet<>(songList));
+        Set<Song> songs = songService.getSongsByArtistName(mySong.getArtistName());
 
         //test
         assertThat(songs).isNotEmpty();
@@ -111,7 +108,7 @@ public class SongServiceUnitTest {
         mySong.setDescription("power album");
         mySong.setArtistName("Isak Danielson");
 
-        given(songRepository.saveAndFlush(mySong)).willReturn(mySong);
+        given(songRepository.save(mySong)).willReturn(mySong);
 
         Song updatedSong = songService.updateSong(mySong);
 

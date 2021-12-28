@@ -1,17 +1,17 @@
 package com.rest.playlist.service;
 
 import com.rest.playlist.enums.SongCategory;
-import com.rest.playlist.web.exception.ResourceNotFoundException;
 import com.rest.playlist.model.Song;
 import com.rest.playlist.repository.SongRepository;
-import org.springframework.stereotype.Service;
-
+import com.rest.playlist.web.exception.ResourceNotFoundException;
+import org.apache.commons.lang3.EnumUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.commons.lang3.EnumUtils;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Service
 @Transactional
@@ -26,13 +26,13 @@ public class SongServiceImpl implements ISongService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Song> getAllSongs() {
-        return songRepository.findAll();
+    public Set<Song> getAllSongs() {
+        return new HashSet<>(songRepository.findAll());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Song> getSongsByCategory(String category) {
+    public Set<Song> getSongsByCategory(String category) {
         SongCategory searchedCategory = EnumUtils.getEnumIgnoreCase(SongCategory.class, category);
         if (searchedCategory == null) {
             throw new ResourceNotFoundException("Not found Category with value = " + category);
@@ -42,7 +42,7 @@ public class SongServiceImpl implements ISongService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Song> getSongsByArtistName(String artistName) {
+    public Set<Song> getSongsByArtistName(String artistName) {
         return songRepository.findSongsByArtistName(artistName);
     }
 
@@ -71,7 +71,7 @@ public class SongServiceImpl implements ISongService {
         searchedSong.setCategory(song.getCategory());
         searchedSong.setDuration(song.getDuration());
 
-        return songRepository.saveAndFlush(song);
+        return songRepository.save(song);
     }
 
     @Override
